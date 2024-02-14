@@ -3,3 +3,5 @@ all:
 
 capture:
 	python ./src/capture.py
+detect:
+	python ./src/detector.py
