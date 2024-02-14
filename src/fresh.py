@@ -30,12 +30,19 @@ def tibia_window_detect(toprocess, tolerance=10, offset=10):
         & (tolerance - offset <= b)
     )
     threshold = 10
+    """
+    mask out the unnecessary pixels with black color
+    """
     toprocess[~tibia_window] = [0, 0, 0]
-    toprocess[:, :, 0] = np.where(toprocess[:, :, 0] < threshold, [255], [0])
-    toprocess[:, :, 1] = np.where(toprocess[:, :, 1] < threshold, [255], [0])
-    toprocess[:, :, 2] = np.where(toprocess[:, :, 2] < threshold, [255], [0])
-    imshow("awd", toprocess)
+    """
+    if each pixel's individual color value are smaller than threadhold then
+    make them white other wise keep them whites
+    """
+    toprocess[:, :, 0] = np.where(toprocess[:, :, 0] > threshold, [255], [0])
+    toprocess[:, :, 1] = np.where(toprocess[:, :, 1] > threshold, [255], [0])
+    toprocess[:, :, 2] = np.where(toprocess[:, :, 2] > threshold, [255], [0])
     toprocess = cv2.cvtColor(toprocess, cv2.COLOR_BGR2GRAY)
+    imshow("wad", toprocess)
     return toprocess
 
 
@@ -103,8 +110,8 @@ def find_lines(grayed_img: MatLike, colored_base: MatLike):
 
 
 def main():
-    img = cv2.imread("img/test1.png")
-    # imshow("wa", img)
+    img = cv2.imread("img/test1_small.png")
+    imshow("wa", img)
     # tibia_tol_ofst_adjust("wad", img)
     find_lines(tibia_window_detect(img.copy(), 71, 21), img)
 
