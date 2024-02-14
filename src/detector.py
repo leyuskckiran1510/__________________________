@@ -11,6 +11,7 @@ import numpy as np
 from typing import List, Tuple, Set
 
 # self-code imports
+from fresh import tibia_window_detect
 
 
 def angle_between_points(x1, y1, x2, y2) -> int:
@@ -44,14 +45,8 @@ def create_rect(points1: List[int], points2: List[int]) -> Tuple[Tuple[int, int]
     # return (x_min, y_min), (x_max, y_max)
 
 
-def distance(p1, p2):
-    return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
-
-
-# def find_rectangles(lines: List[List[List[int]]] | MatLike) -> Set[Tuple[Tuple[int, int], Tuple[int, int]]] | MatLike:
-def find_rectangles(lines: np.ndarray | MatLike):
+def find_rectangles(lines: List[List[List[int]]] | MatLike) -> Set[Tuple[Tuple[int, int], Tuple[int, int]]] | MatLike:
     rectangles = set()
-    tomerge = []
     for line1 in lines:
         for points1 in line1:
             for line2 in lines:
@@ -59,23 +54,11 @@ def find_rectangles(lines: np.ndarray | MatLike):
                     if sum(points1) == sum(points2):
                         continue
                     angle_diff = abs(angle_between_points(*points1) - angle_between_points(*points2))
-                    dist = distance(points1, points2)
-                    if angle_diff in [90, 270] and dist > 200:
+                    if angle_diff in [90, 270]:
                         rect = create_rect(points1, points2)
                         rectangles.add(rect)
-                    if (
-                        angle_diff == 0
-                        and (points1[0] == points2[0] or points1[1] or points2[1])
-                        and not angle_between_points(points1[0], points1[1], points2[0], points2[1])
-                    ):
-                        # print(
-                        #     points1, points2, angle_diff, angle_between_points(*points1), angle_between_points(*points2)
-                        # )
-                        # exit(0)
-                        new_line = (points1[0], points1[1], points2[0], points2[1])
-                        tomerge.append(new_line)
 
-    return rectangles, tomerge
+    return rectangles
 
 
 def aspect_ratio(point1, point2) -> Fraction:
@@ -100,10 +83,11 @@ def is_close_to_16_9(ratio):
     return float(diff) < threshold
 
 
-def detect_lines(img: MatLike) -> List:
+def detect_lines(gray: MatLike, img: MatLike) -> List:
     # img = cv2.addWeighted(img, 0.8, img, 0.8, 0)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
+    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # gray = img
+    gray = tibia_window_detect(img, 71, 21)
     kernel_size = 5
     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
 
@@ -111,7 +95,7 @@ def detect_lines(img: MatLike) -> List:
     high_threshold = 150
     rho = 2
     theta = np.pi / 180
-    threshold = 40
+    threshold = 50
     line_magnitude_px = 200
     synaptics_gap = 100
     cv2.namedWindow("image")
@@ -132,14 +116,7 @@ def detect_lines(img: MatLike) -> List:
         for line in lines:
             for startx, starty, endx, endy in line:
                 cv2.line(line_image, (startx, starty), (endx, endy), (0, 0, 255), 3)
-        rectangles, new_lines = find_rectangles(lines)
-        # print(new_lines)
-        for startx, starty, endx, endy in new_lines:
-            cv2.line(line_image, (startx, starty), (endx, endy), (255, 0, 255), 3)
-            cv2.imshow("image", line_image)
-            key = cv2.waitKey(0)
-            if key & 0xFF == ord("q"):
-                break
+        rectangles = find_rectangles(lines)
         key = 0x00
         _l = line_image.copy()
         for p1, p2 in rectangles:
@@ -149,13 +126,13 @@ def detect_lines(img: MatLike) -> List:
             line_image = _l.copy()
             cv2.rectangle(line_image, p1, p2, (255, 100, 50), 2)
             cv2.imshow("image", line_image)
-            key = cv2.waitKey(0)
+            key = cv2.waitKey(1)
             if key & 0xFF == ord("q"):
                 print(p1, p2)
                 break
         if key & 0xFF == ord("q"):
             break
-        break
+        # break
         # threshold = cv2.getTrackbarPos("threshold", "image")
         # line_magnitude_px = cv2.getTrackbarPos("line_magnitude_px", "image")
         # synaptics_gap = cv2.getTrackbarPos("synaptics_gap", "image")
@@ -167,53 +144,65 @@ def detect_lines(img: MatLike) -> List:
     return points
 
 
-def best_edges(image: MatLike):
-    # Convert the image to YCbCr color space
+def edges_with_ycrcb(image: MatLike):
     ycbcr_image = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
-
-    # Extract the Y channel (luma component)
-    y_channel = ycbcr_image[:, :, 2]
-
-    # Apply Canny edge detection on the Y channel
-    edges = cv2.Canny(y_channel, 100, 200)  # You may need to adjust the thresholds based on your image
-
-    cv2.imshow("Edges", edges)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    y_channel = ycbcr_image[:, :, 0]
+    edges = cv2.Canny(y_channel, 100, 200)
+    # cv2.imshow("Edges", edges)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     return edges
 
 
-def normal_edges(img: MatLike):
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def edges_with_gray(img: MatLike):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     kernel_size = 5
     blur_gray = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-
     low_threshold = 10
     high_threshold = 150
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
-    cv2.imshow("Edges", edges)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("Edges", edges)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     return edges
 
 
+def click_Callback(ev, x, y, _, __):
+    if ev == cv2.EVENT_LBUTTONUP:
+        print(x, y)
+
+
+def imshow(winname, img):
+    while True:
+        cv2.imshow(winname, img)
+        key = cv2.waitKey(0) & 0xFF
+        if key == ord("q"):
+            break
+
+
+def debug_img(img: MatLike):
+    cv2.namedWindow("window")
+    cv2.setMouseCallback("window", click_Callback)
+    imshow("window", img)
+
+
 def main():
-    img = cv2.imread("img/test1_small.png")
-    points = detect_lines(img)
-    # points = [[[0, 733], [1364, 733]], [[24, 36], [1236, 36]]]
-    # cv2.line(img, *points[0], [255, 100, 10], 10)
-    # cv2.line(img, *points[1], [255, 100, 10], 10)
-    # cv2.imshow("Awd", img)
-    # cv2.waitKey(0)
+    img = cv2.imread("img/test2.png")
+    _img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    detect_lines(_img, img)
+    # debug_img(img)
+    # e1 = edges_with_ycrcb(img)
+    # e2 = edges_with_gray(img)
+    # diff = abs(e1 + e2 + _img)
+
     # while True:
-    #     e1 = best_edges(img)
-    #     e2 = normal_edges(img)
-    #     diff = abs(e1 + e2)
+    #     e1 = edges_with_ycrcb(img)
+    #     e2 = edges_with_gray(img)
+    #     diff = _img - abs(e1 + e2)
     #     cv2.imshow("wa", diff)
     #     key = cv2.waitKey(0) & 0xFF
     #     if key == ord("q"):
     #         break
-    # rectangle = (617, 185), (1181, 493)
 
     # rectangle = rectangle[::-1]
     # while True:

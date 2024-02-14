@@ -5,3 +5,6 @@ capture:
 	python ./src/capture.py
 detect:
 	python ./src/detector.py
+
+fresh:
+	python ./src/fresh.py
