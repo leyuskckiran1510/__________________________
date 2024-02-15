@@ -11,7 +11,6 @@ import numpy as np
 from typing import List, Tuple, Set
 
 # self-code imports
-from fresh import tibia_window_detect
 
 
 def angle_between_points(x1, y1, x2, y2) -> int:
@@ -87,7 +86,6 @@ def detect_lines(gray: MatLike, img: MatLike) -> List:
     # img = cv2.addWeighted(img, 0.8, img, 0.8, 0)
     # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # gray = img
-    gray = tibia_window_detect(img, 71, 21)
     kernel_size = 5
     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
 

@@ -42,7 +42,6 @@ def tibia_window_detect(toprocess, tolerance=10, offset=10):
     toprocess[:, :, 1] = np.where(toprocess[:, :, 1] > threshold, [255], [0])
     toprocess[:, :, 2] = np.where(toprocess[:, :, 2] > threshold, [255], [0])
     toprocess = cv2.cvtColor(toprocess, cv2.COLOR_BGR2GRAY)
-    imshow("wad", toprocess)
     return toprocess
 
 
@@ -109,11 +108,25 @@ def find_lines(grayed_img: MatLike, colored_base: MatLike):
     imshow("those", line_image)
 
 
+def find_rectangle(grayed_img: MatLike, colored_base: MatLike):
+    imshow("a", grayed_img)
+    _colored_base = colored_base.copy()
+    contours, _ = cv2.findContours(grayed_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(_colored_base, contours, -1, (0, 0, 255), 2)
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 500:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(_colored_base, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    imshow("awd", _colored_base)
+
+
 def main():
-    img = cv2.imread("img/test1_small.png")
-    imshow("wa", img)
+    img = cv2.imread("img/test1.png")
     # tibia_tol_ofst_adjust("wad", img)
-    find_lines(tibia_window_detect(img.copy(), 71, 21), img)
+    # find_lines(tibia_window_detect(img.copy(), 71, 21), img)
+    find_rectangle(tibia_window_detect(img.copy(), 71, 10), img)
+    # imshow("a", tibia_window_detect(img.copy(), 71, 21))
 
 
 if __name__ == "__main__":
