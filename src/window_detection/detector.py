@@ -1,5 +1,6 @@
 # internal
 import cProfile
+import timeit
 from os import environ, listdir, path
 
 # external
@@ -10,29 +11,23 @@ from line_profiler import profile
 from cv2.typing import MatLike
 
 """
-Command Ran
+Command Ran:-
     PROFILE=1 make detect ana
-
-Output:
+Output:-
     Running detector.py
-    .venv/bin/python ./src/detector.py
+    .venv/bin/python ./src/window_detection/detector.py -O100
     Analyzing..
     .venv/bin/python analyze_profiled.py
-    Thu Feb 15 16:32:43 2024    profile.txt
+    Thu Feb 15 19:52:59 2024    profile.txt
 
-             996 function calls in 0.065 seconds 
-        ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    0.068    0.068 <string>:1(<listcomp>)
-        .....
-        970    0.001    0.000    0.001    0.000 {contourArea}
-        .....
-        [trancuated]
+             992 function calls in 0.011 seconds
 
+0.065sec to 0.011sec
 """
 
 
 @profile
-def tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
+def _tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
     """
     detect tibia game window theme color and
     detect widgets
@@ -78,6 +73,13 @@ def tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
     toprocess = cv2.merge((b, g, r))
     toprocess = cv2.cvtColor(toprocess, cv2.COLOR_BGR2GRAY)
     return toprocess
+
+
+@profile
+def tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
+    l = tolerance - offset
+    r = tolerance + offset
+    return cv2.inRange(toprocess, (l, l, l), (r, r, r), None)
 
 
 def tibia_tol_ofst_adjust(winname, img):
@@ -134,7 +136,7 @@ def main():
 
     # for image_name in listdir("img"):
     #     img = cv2.imread(path.join("img", image_name))
-    #     find_rectangle(tibia_window_detect(img.copy(), 71, 10), img)
+    # find_rectangle(tibia_window_detect(img.copy(), 71, 10), img)
 
 
 if __name__ == "__main__":

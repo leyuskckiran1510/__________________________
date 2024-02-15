@@ -12,11 +12,11 @@ endif
 
 all: activate
 	@echo "Running main.py"
-	$(VIRTUAL_ENV_BIN)/python ./src/main.py
+	$(VIRTUAL_ENV_BIN)/python ./src/window_detection/main.py
 
 detect: activate
 	@echo "Running detector.py"
-	$(VIRTUAL_ENV_BIN)/python ./src/detector.py -O100
+	$(VIRTUAL_ENV_BIN)/python ./src/window_detection/detector.py -O100
 
 ana:
 	@echo "Analyzing.."
@@ -24,11 +24,15 @@ ana:
 
 dold: activate
 	@echo "Running detector_old_assuming_16_9_ratio.py"
-	$(VIRTUAL_ENV_BIN)/python ./src/detector_old_assuming_16_9_ratio.py
+	$(VIRTUAL_ENV_BIN)/python ./src/window_detection/detector_old_assuming_16_9_ratio.py
 
 ffmpeg: activate
 	@echo "Running ffmpeg.py"
-	$(VIRTUAL_ENV_BIN)/python ./src/ffmpeg.py
+	$(VIRTUAL_ENV_BIN)/python ./src/window_detection/ffmpeg.py
+
+ocr:activate
+	@echo "Running OCR"
+	$(VIRTUAL_ENV_BIN)/python ./src/window_ocr/main.py
 
 # Create virtual environment if not exists
 activate: $(ACTIVATE_VENV)
