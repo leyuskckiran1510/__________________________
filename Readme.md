@@ -33,17 +33,11 @@ make detect
 python ./src/detector.py
 ```
 
-# To time it
-    The value is the number of itertaion for timeit module,
-    It is working in single reapte for now
-    with make
+# To Profile it
+    Value of Profile denotes the number of times the functions get's called
 ```console
-TIMEIT=1 make detect
+PROFILE=1 make detect ana
 ```
-    direct
-```console
-TIMEIT=1 python ./src/detector.py
-
 
 # Currently 2024-Feb-15
 ![Detectd Image](./img/detected_test1.png)

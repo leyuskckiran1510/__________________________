@@ -1,0 +1,75 @@
+Timer unit: 1e-06 s
+
+Total time: 0.0569595 s
+File: ./src/detector.py
+Function: tibia_window_detect at line 34
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    34                                           @profile
+    35                                           def tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
+    36                                               """
+    37                                               detect tibia game window theme color and
+    38                                               detect widgets
+    39                                               Returns:-
+    40                                                   GrayScaled Image with detected part as white and other black
+    41                                               """
+    42         1          6.7      6.7      0.0      b = toprocess[:, :, 0]
+    43         1          1.7      1.7      0.0      g = toprocess[:, :, 1]
+    44         1          1.0      1.0      0.0      r = toprocess[:, :, 2]
+    45                                           
+    46         1          0.6      0.6      0.0      """
+    47                                                   choose value of only those pixel r,g,b 
+    48                                                       such that:-
+    49                                                           if 
+    50                                                               tolerance-offset <= r <= tolerance+offset &
+    51                                                               tolerance-offset <= g <= tolerance+offset &
+    52                                                               tolerance-offset <= b <= tolerance+offset &:
+    53                                                               choose_this_pixels 
+    54                                                   here I am basically generating mask of it
+    55                                               """
+    56         1          0.4      0.4      0.0      tibia_window = (
+    57         6       3504.5    584.1      6.2          (r <= tolerance + offset)  # type:ignore
+    58         1       2115.0   2115.0      3.7          & (tolerance - offset <= r)  # type:ignore
+    59         1       1957.0   1957.0      3.4          & (g <= tolerance + offset)  # type:ignore
+    60         1       1479.2   1479.2      2.6          & (tolerance - offset <= g)  # type:ignore
+    61         1       1947.7   1947.7      3.4          & (b <= tolerance + offset)  # type:ignore
+    62         1       1461.6   1461.6      2.6          & (tolerance - offset <= b)  # type:ignore
+    63                                               )
+    64         1          0.5      0.5      0.0      threshold = 10
+    65         1          0.5      0.5      0.0      """
+    66                                               mask out the unnecessary pixels with black color
+    67                                               """
+    68                                               # toprocess[~tibia_window] = [0, 0, 0]
+    69         1      35519.5  35519.5     62.4      toprocess[~tibia_window] = [0, 0, 0]
+    70         1          1.9      1.9      0.0      """
+    71                                               if each pixel's individual color value are smaller than threadhold then
+    72                                               make them white other wise keep them whites
+    73                                               """
+    74         1          1.0      1.0      0.0      value = 255
+    75         1       1948.6   1948.6      3.4      _, b = cv2.threshold(b, threshold, value, cv2.THRESH_BINARY)
+    76         1       1823.5   1823.5      3.2      _, g = cv2.threshold(g, threshold, value, cv2.THRESH_BINARY)
+    77         1       1802.7   1802.7      3.2      _, r = cv2.threshold(r, threshold, value, cv2.THRESH_BINARY)
+    78         1       2990.1   2990.1      5.2      toprocess = cv2.merge((b, g, r))
+    79         1        394.3    394.3      0.7      toprocess = cv2.cvtColor(toprocess, cv2.COLOR_BGR2GRAY)
+    80         1          1.4      1.4      0.0      return toprocess
+
+Total time: 0.00478462 s
+File: ./src/detector.py
+Function: find_rectangle at line 108
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   108                                           @profile
+   109                                           def find_rectangle(grayed_img: MatLike, colored_base: MatLike, i: int = 0):
+   110                                               # imshow("a", grayed_img)
+   111         1        387.9    387.9      8.1      _colored_base = colored_base.copy()
+   112         1       2799.3   2799.3     58.5      contours, _ = cv2.findContours(grayed_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+   113       971        259.8      0.3      5.4      for contour in contours:
+   114       970        846.5      0.9     17.7          area = cv2.contourArea(contour)
+   115       970        344.4      0.4      7.2          if area > 500:
+   116         6         18.0      3.0      0.4              x, y, w, h = cv2.boundingRect(contour)
+   117         6        128.8     21.5      2.7              cv2.rectangle(_colored_base, (x, y), (x + w, y + h), (0, 255, 0), 2)
+   118                                               # cv2.imwrite(f"img_dumps/{i}.png", _colored_base)
+   119                                               # imshow("awd", _colored_base)
+

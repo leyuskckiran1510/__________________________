@@ -16,7 +16,11 @@ all: activate
 
 detect: activate
 	@echo "Running detector.py"
-	$(VIRTUAL_ENV_BIN)/python ./src/detector.py
+	$(VIRTUAL_ENV_BIN)/python ./src/detector.py -O100
+
+ana:
+	@echo "Analyzing.."
+	$(VIRTUAL_ENV_BIN)/python analyze_profiled.py
 
 dold: activate
 	@echo "Running detector_old_assuming_16_9_ratio.py"
