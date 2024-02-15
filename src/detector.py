@@ -61,9 +61,10 @@ def tibia_window_detect(toprocess, tolerance=10, offset=10):
     if each pixel's individual color value are smaller than threadhold then
     make them white other wise keep them whites
     """
-    toprocess[:, :, 0] = np.where(toprocess[:, :, 0] > threshold, [255], [0])
-    toprocess[:, :, 1] = np.where(toprocess[:, :, 1] > threshold, [255], [0])
-    toprocess[:, :, 2] = np.where(toprocess[:, :, 2] > threshold, [255], [0])
+    _, b = cv2.threshold(b, threshold, 255, cv2.THRESH_BINARY)
+    _, g = cv2.threshold(g, threshold, 255, cv2.THRESH_BINARY)
+    _, r = cv2.threshold(r, threshold, 255, cv2.THRESH_BINARY)
+    toprocess = cv2.merge((b, g, r))
 
     toprocess = cv2.cvtColor(toprocess, cv2.COLOR_BGR2GRAY)
     return toprocess
