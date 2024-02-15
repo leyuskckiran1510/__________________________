@@ -8,31 +8,22 @@ from cv2.typing import MatLike
 from typing import List
 
 """
-Date:- 2024-Feb-15:13-01-26 PM
-Command Ran for numbers=10 and repeate=10
-    make detect
-
-Output
+Date:- 2024-Feb-15:15-03-50 PM
+Command Ran
+    TIMEIT=10 make detect
+OutpUt
     Running detector.py
     .venv/bin/python ./src/detector.py
-    It Took min: 1.9687327700012247
-    It Took max: 2.0275950329996704
-
-Or else
-Command Ran
-    .venv/bin/python ./src/detector.py
-Result
-    It Took min: 1.9687327700012247
-    It Took max: 2.0275950329996704
-
-
+    It Took min: 0.15676005559998885
+    It Took max: 0.15676005559998885
+Conclusion:-
+    It takes 0.15 seconds for a single image
+    It's too slow 
 """
 
 
 def tibia_window_detect(toprocess, tolerance=10, offset=10):
-    b = toprocess[:, :, 0]
-    g = toprocess[:, :, 1]
-    r = toprocess[:, :, 2]
+    b, g, r = cv2.split(toprocess)
 
     """
         choose value of only those pixel r,g,b 

@@ -34,7 +34,8 @@ python ./src/detector.py
 ```
 
 # To time it
-    The value is arbiratoy, it just need not to be falsy value
+    The value is the number of itertaion for timeit module,
+    It is working in single reapte for now
     with make
 ```console
 TIMEIT=1 make detect
