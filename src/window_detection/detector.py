@@ -2,6 +2,7 @@
 import cProfile
 import timeit
 from os import environ, listdir, path
+from typing import List
 
 # external
 import cv2
@@ -82,7 +83,7 @@ def tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
     return cv2.inRange(toprocess, (l, l, l), (r, r, r), None)
 
 
-def tibia_tol_ofst_adjust(winname, img):
+def tibia_tol_ofst_adjust(winname: str, img: MatLike) -> None:
     cv2.namedWindow(winname)
     ts = 71  # jus perfect
     ofset = 10  # just perfect for the image I have
@@ -107,39 +108,38 @@ def imshow(winname, img):
             break
 
 
+class Rect:
+    ...
+
+
 @profile
-def find_rectangle(grayed_img: MatLike, colored_base: MatLike, i: int = 0):
-    # imshow("a", grayed_img)
-    _colored_base = colored_base.copy()
+def find_rectangle(grayed_img: MatLike) -> List[Rect]:
     contours, _ = cv2.findContours(grayed_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    recs = []
     for contour in contours:
         area = cv2.contourArea(contour)
         if area > 500:
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(_colored_base, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    # cv2.imwrite(f"img_dumps/{i}.png", _colored_base)
-    # imshow("awd", _colored_base)
-
-
-img = cv2.imread("img/test1_small.png")
-PROFILE = 0
+            recs.append(cv2.boundingRect(contour))
+    return recs
 
 
 def main():
     if PROFILE:
         cProfile.run(
-            f"[find_rectangle(tibia_window_detect(img.copy(), 71, 10), img,i) for i in range({PROFILE})]",
+            f"[find_rectangle(tibia_window_detect(img.copy(), 71, 10)) for i in range({PROFILE})]",
             filename="profile.txt",
         )
     else:
-        find_rectangle(tibia_window_detect(img.copy(), 71, 10), img)
-
+        # find_rectangle(tibia_window_detect(img.copy(), 71, 10))
+        tibia_tol_ofst_adjust("a", img)
     # for image_name in listdir("img"):
     #     img = cv2.imread(path.join("img", image_name))
     # find_rectangle(tibia_window_detect(img.copy(), 71, 10), img)
 
 
 if __name__ == "__main__":
+    img = cv2.imread("img/ingame2.png")
+    PROFILE = 0
     if profile := environ.get("PROFILE", environ.get("profile", None)):
         PROFILE = int(profile)
         main()

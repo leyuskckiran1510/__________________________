@@ -39,5 +39,8 @@ python ./src/detector.py
 PROFILE=1 make detect ana
 ```
 
-# Currently 2024-Feb-15
-![Detectd Image](./img/detected_test1.png)
+
+# TODOS:-
+> Test Cases
+> Vision State
+> Bot Loop
