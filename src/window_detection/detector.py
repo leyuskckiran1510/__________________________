@@ -6,6 +6,7 @@ from typing import List
 
 # external
 import cv2
+import numpy as np
 from line_profiler import profile
 
 # typing
@@ -28,55 +29,6 @@ Output:-
 
 
 @profile
-def _tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
-    """
-    detect tibia game window theme color and
-    detect widgets
-    Returns:-
-        GrayScaled Image with detected part as white and other black
-    """
-    b = toprocess[:, :, 0]
-    g = toprocess[:, :, 1]
-    r = toprocess[:, :, 2]
-
-    """
-        choose value of only those pixel r,g,b 
-            such that:-
-                if 
-                    tolerance-offset <= r <= tolerance+offset &
-                    tolerance-offset <= g <= tolerance+offset &
-                    tolerance-offset <= b <= tolerance+offset &:
-                    choose_this_pixels 
-        here I am basically generating mask of it
-    """
-    tibia_window = (
-        (r <= tolerance + offset)  # type:ignore
-        & (tolerance - offset <= r)  # type:ignore
-        & (g <= tolerance + offset)  # type:ignore
-        & (tolerance - offset <= g)  # type:ignore
-        & (b <= tolerance + offset)  # type:ignore
-        & (tolerance - offset <= b)  # type:ignore
-    )
-    threshold = 10
-    """
-    mask out the unnecessary pixels with black color
-    """
-    # TODO: It is taking up most of the time [65%] need to speed this line up
-    toprocess[~tibia_window] = [0, 0, 0]
-    """
-    if each pixel's individual color value are smaller than threadhold then
-    make them white other wise keep them whites
-    """
-    value = 255
-    _, b = cv2.threshold(b, threshold, value, cv2.THRESH_BINARY)
-    _, g = cv2.threshold(g, threshold, value, cv2.THRESH_BINARY)
-    _, r = cv2.threshold(r, threshold, value, cv2.THRESH_BINARY)
-    toprocess = cv2.merge((b, g, r))
-    toprocess = cv2.cvtColor(toprocess, cv2.COLOR_BGR2GRAY)
-    return toprocess
-
-
-@profile
 def tibia_window_detect(toprocess: MatLike, tolerance=10, offset=10) -> MatLike:
     l = tolerance - offset
     r = tolerance + offset
@@ -91,6 +43,8 @@ def tibia_tol_ofst_adjust(winname: str, img: MatLike) -> None:
     cv2.createTrackbar("ofset", winname, ofset, 255, lambda *_: None)
     while True:
         processed = tibia_window_detect(img, ts, ofset)
+        processed = cv2.erode(processed, np.ones((2, 100)))
+
         cv2.imshow(winname, processed)
         ts = cv2.getTrackbarPos("ts", winname)
         ofset = cv2.getTrackbarPos("ofset", winname)
@@ -123,6 +77,15 @@ def find_rectangle(grayed_img: MatLike) -> List[Rect]:
     return recs
 
 
+def find_rectangle_draw(grayed_img: MatLike, img: MatLike):
+    contours, _ = cv2.findContours(grayed_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 500:
+            cv2.rectangle(img, cv2.boundingRect(contour), (255, 200, 10), 2)
+    imshow("a", grayed_img)
+
+
 def main():
     if PROFILE:
         cProfile.run(
@@ -130,15 +93,15 @@ def main():
             filename="profile.txt",
         )
     else:
-        # find_rectangle(tibia_window_detect(img.copy(), 71, 10))
-        tibia_tol_ofst_adjust("a", img)
+        find_rectangle_draw(tibia_window_detect(img.copy(), 71, 10), img)
+        # tibia_tol_ofst_adjust("a", img)
     # for image_name in listdir("img"):
     #     img = cv2.imread(path.join("img", image_name))
     # find_rectangle(tibia_window_detect(img.copy(), 71, 10), img)
 
 
 if __name__ == "__main__":
-    img = cv2.imread("img/ingame2.png")
+    img = cv2.imread("img/login.png")
     PROFILE = 0
     if profile := environ.get("PROFILE", environ.get("profile", None)):
         PROFILE = int(profile)
