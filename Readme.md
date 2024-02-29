@@ -1,4 +1,4 @@
-# Simple Tibia game window and widgets detection
+# Simple tibia game window and widgets detection
 
 # How To Run:-
 ## Installation
